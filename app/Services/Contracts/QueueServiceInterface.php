@@ -18,4 +18,11 @@ interface QueueServiceInterface
     function updateOrderStatus($orderId,$status);
 
     function deleteOrder($orderId);
+
+    function closeBlock($times);
+
+    function getClosedBlock();
+
+    function releaseBlock($info);
+
 }

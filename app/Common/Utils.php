@@ -69,20 +69,22 @@ class Utils
     {
         if ($var instanceof \stdClass) {
             // 对对象的转换
-            return self::camelize(get_object_vars($var),$separator);
+            return self::camelize(get_object_vars($var), $separator);
         }
 
-        if (is_array($var)){
+        if (is_array($var)) {
             if (self::isAssoc($var)) {
                 $newKeys = [];
-                foreach ($var as $key => &$value){
+                foreach ($var as $key => &$value) {
                     if (isset($newKeys[$key])) {
                         continue;
                     }
-                    $newKey = self::camelizeString($key,$separator);
+                    $newKey = self::camelizeString($key, $separator);
                     $newKeys[$newKey] = true;
-                    $var[$newKey] =  self::camelize($value,$separator);
-                    unset($var[$key]);
+                    $var[$newKey] = self::camelize($value, $separator);
+                    if ($key != $newKey) {
+                        unset($var[$key]);
+                    }
                 }
             }
         }

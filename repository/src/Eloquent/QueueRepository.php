@@ -26,7 +26,7 @@ class QueueRepository extends AbstractRepository
     }
 
     function findFreeByTime($startTime,$endTime){
-        return DB::select('select * from queue where start_time <= '.$startTime.' and end_time >= '.$endTime);
+        return DB::select('select * from queue where start_time >= '.$startTime.' and end_time <= '.$endTime);
     }
 
     function findExpiresId($now){
@@ -34,4 +34,7 @@ class QueueRepository extends AbstractRepository
 
     }
 
+    function deleteWhereIn($param, array $data){
+        $this->model->whereIn($param,$data)->delete();
+    }
 }

@@ -64,7 +64,20 @@ class QueueService implements QueueServiceInterface
             }
         });
 
-        return $this->queueRepo->findFreeByTime($startTime, $endTime);
+        $data =  $this->queueRepo->getByMult([
+            [
+                'start_time','>=',$startTime
+            ],
+            [
+                'end_time','<=',$endTime
+            ]
+        ])->toArray();
+
+        foreach ($data as &$item){
+            $item = Utils::camelize($item);
+        }
+
+        return $data;
     }
 
     function updateOrderStatus($orderId, $status)
@@ -74,6 +87,38 @@ class QueueService implements QueueServiceInterface
 
     function deleteOrder($orderId)
     {
-        return $this->queueRepo->deleteWhere(['id'=>$orderId]);
+        return $this->queueRepo->deleteWhere(['id'=>$orderId]) ==1;
+    }
+
+    function closeBlock($times)
+    {
+
+       $flag = false;
+       DB::transaction(function ()use($times,&$flag){
+           foreach ($times as &$time) {
+               $time['status'] = 2;
+               $time = Utils::unCamelize($time);
+               $this->queueRepo->insert($time);
+          }
+          $flag = true;
+       });
+       return $flag;
+    }
+
+
+    function getClosedBlock(){
+
+        $data = $this->queueRepo->getBy('status',2,['id','status','start_time','end_time'])->toArray();
+
+        foreach ($data as &$item){
+            $item = Utils::camelize($item);
+        }
+        return $data;
+    }
+
+
+    function releaseBlock($blockIds)
+    {
+        return $this->queueRepo->deleteWhereIn('id',$blockIds);
     }
 }

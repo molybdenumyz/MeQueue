@@ -26,3 +26,9 @@ Route::put('/order','QueueController@updateOrderStatus');
 Route::get('/order','QueueController@getOrder');
 
 Route::delete('/order/{orderId}','QueueController@deleteOrder');
+
+Route::post('/close','QueueController@closeBlock');
+
+Route::post('/release','QueueController@releaseBlock');
+
+Route::get('/block','QueueController@getBlocks');
