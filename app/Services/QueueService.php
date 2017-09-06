@@ -11,6 +11,7 @@ namespace App\Services;
 
 use App\Common\Utils;
 use App\Exceptions\ApplyLateException;
+use App\Exceptions\TImeHaveBeenBlock;
 use App\Repository\Eloquent\QueueRepository;
 use App\Services\Contracts\QueueServiceInterface;
 use Illuminate\Support\Facades\DB;
@@ -44,6 +45,8 @@ class QueueService implements QueueServiceInterface
                     }
                 }elseif ($record->status == 1){
                     throw new ApplyLateException();
+                }elseif ($record->status == 2){
+                    throw new TImeHaveBeenBlock();
                 }
             }
         }

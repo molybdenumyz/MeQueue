@@ -159,4 +159,9 @@ class QueueController extends Controller
             ]
         );
     }
+    
+    
+    public function dump(){
+        
+    }
 }
