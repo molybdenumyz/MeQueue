@@ -95,6 +95,7 @@ return array(
             'printArea'             => null,
             'firstPageNumber'       => null,
         ],
+
     ],
 
     /*

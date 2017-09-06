@@ -53,7 +53,7 @@ abstract class AbstractRepository implements RepositoryInterface
 
     public function getByMult(array $params, array $columns = ['*'])
     {
-        return $this->model
+        return $this->model->orderBy('start_time')
             ->where($params)
             ->get($columns);
     }

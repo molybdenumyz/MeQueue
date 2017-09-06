@@ -14,7 +14,9 @@ use App\Exceptions\ApplyLateException;
 use App\Exceptions\TImeHaveBeenBlock;
 use App\Repository\Eloquent\QueueRepository;
 use App\Services\Contracts\QueueServiceInterface;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class QueueService implements QueueServiceInterface
 {
@@ -43,9 +45,9 @@ class QueueService implements QueueServiceInterface
                     } else {
                         throw new ApplyLateException();
                     }
-                }elseif ($record->status == 1){
+                } elseif ($record->status == 1) {
                     throw new ApplyLateException();
-                }elseif ($record->status == 2){
+                } elseif ($record->status == 2) {
                     throw new TImeHaveBeenBlock();
                 }
             }
@@ -58,25 +60,25 @@ class QueueService implements QueueServiceInterface
     {
         $now = Utils::createTimeStamp();
 
-        $appliers = $this->queueRepo->findExpiresId($now);
+//        $appliers = $this->queueRepo->findExpiresId($now);
+//
+//        DB::transaction(function () use ($appliers) {
+//
+//            foreach ($appliers as $applier) {
+//                $this->queueRepo->delete($applier->id);
+//            }
+//        });
 
-        DB::transaction(function () use ($appliers) {
-
-            foreach ($appliers as $applier) {
-                $this->queueRepo->delete($applier->id);
-            }
-        });
-
-        $data =  $this->queueRepo->getByMult([
+        $data = $this->queueRepo->getByMult([
             [
-                'start_time','>=',$startTime
+                'start_time', '>=', $startTime
             ],
             [
-                'end_time','<=',$endTime
+                'end_time', '<=', $endTime
             ]
         ])->toArray();
 
-        foreach ($data as &$item){
+        foreach ($data as &$item) {
             $item = Utils::camelize($item);
         }
 
@@ -90,30 +92,31 @@ class QueueService implements QueueServiceInterface
 
     function deleteOrder($orderId)
     {
-        return $this->queueRepo->deleteWhere(['id'=>$orderId]) ==1;
+        return $this->queueRepo->deleteWhere(['id' => $orderId]) == 1;
     }
 
     function closeBlock($times)
     {
 
-       $flag = false;
-       DB::transaction(function ()use($times,&$flag){
-           foreach ($times as &$time) {
-               $time['status'] = 2;
-               $time = Utils::unCamelize($time);
-               $this->queueRepo->insert($time);
-          }
-          $flag = true;
-       });
-       return $flag;
+        $flag = false;
+        DB::transaction(function () use ($times, &$flag) {
+            foreach ($times as &$time) {
+                $time['status'] = 2;
+                $time = Utils::unCamelize($time);
+                $this->queueRepo->insert($time);
+            }
+            $flag = true;
+        });
+        return $flag;
     }
 
 
-    function getClosedBlock(){
+    function getClosedBlock()
+    {
 
-        $data = $this->queueRepo->getBy('status',2,['id','status','start_time','end_time'])->toArray();
+        $data = $this->queueRepo->getBy('status', 2, ['id', 'status', 'start_time', 'end_time'])->toArray();
 
-        foreach ($data as &$item){
+        foreach ($data as &$item) {
             $item = Utils::camelize($item);
         }
         return $data;
@@ -122,6 +125,65 @@ class QueueService implements QueueServiceInterface
 
     function releaseBlock($blockIds)
     {
-        return $this->queueRepo->deleteWhereIn('id',$blockIds);
+        return $this->queueRepo->deleteWhereIn('id', $blockIds);
+    }
+
+    function dump($sheetName,$startTime, $endTime)
+    {
+        $rows[] = ['当前预约状态', '患者姓名', '患者手机号', '检查部位', '开始时间', '结束时间'];
+
+        $data = $this->queueRepo->getByMult([
+            [
+                'start_time', '>=', $startTime
+            ],
+            [
+                'end_time', '<=', $endTime
+            ],
+            [
+                'status', '!=', 2
+            ],
+            [
+                'expires_at', '>', Utils::createTimeStamp()
+            ]
+        ], ['status', 'name', 'mobile', 'position', 'start_time', 'end_time'])->toArray();
+
+        foreach ($data as &$datum) {
+
+            $datum = array_values($datum);
+            if ($datum[0] == 0) {
+                $datum[0] = '已预约';
+            } elseif ($datum[0] == 1) {
+                $datum[0] = '预约确认';
+            }
+
+            $datum[4] = date('Y-m-d H:i:s', $datum[4] / 1000);
+            $datum[5] = date('Y-m-d H:i:s', $datum[5] / 1000);
+            $rows[] = $datum;
+        }
+
+        $this->export($sheetName, $rows);
+    }
+
+    public function export(string $name, array $rows)
+    {
+        Excel::create($name, function ($excel) use ($rows) {
+            $excel->sheet('sheet1', function ($sheet) use ($rows) {
+
+                $sheet->setWidth(array(
+                    'A' => 15,
+                    'B' => 10,
+                    'C' => 15,
+                    'E' => 20,
+                    'F' => 20
+                ));
+                $sheet->rows($rows);
+            });
+
+        })->download('xlsx', [
+            'Access-Control-Allow-Origin' => '*',
+            'Access-Control-Allow-Headers' => 'Origin, Content-Type, Cookie, Accept,token,Accept,X-Requested-With',
+            'Access-Control-Allow-Methods' => 'GET, POST, DELETE, PATCH, PUT, OPTIONS',
+            'Access-Control-Allow-Credentials' => 'true'
+        ]);
     }
 }

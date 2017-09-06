@@ -32,3 +32,5 @@ Route::post('/close','QueueController@closeBlock');
 Route::post('/release','QueueController@releaseBlock');
 
 Route::get('/block','QueueController@getBlocks');
+
+Route::get('/dump','QueueController@dump');

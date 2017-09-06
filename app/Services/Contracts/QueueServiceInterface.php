@@ -25,4 +25,7 @@ interface QueueServiceInterface
 
     function releaseBlock($info);
 
+    function dump($sheetName,$startTime,$endTime);
+
+
 }

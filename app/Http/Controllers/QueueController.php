@@ -13,6 +13,7 @@ use App\Common\Utils;
 use App\Common\ValidationHelper;
 use App\Exceptions\Common\UnknownException;
 use App\Exceptions\OrderNotExistException;
+use App\Exceptions\PermissionDeniedException;
 use App\Services\QueueService;
 use Illuminate\Http\Request;
 
@@ -60,9 +61,23 @@ class QueueController extends Controller
     public function deleteOrder(Request $request, int $orderId)
     {
 
+        $rules = [
+          'token' => 'required'
+        ];
+
+        ValidationHelper::validateCheck($request->all(),$rules);
+
+        $info = ValidationHelper::getInputData($request,$rules);
+
+        $token = $info['token'];
+
+        if ($token == 'a29f44c76423a2f5787adf0eefdc07ac')
+            throw new PermissionDeniedException();
+
         if (!$this->queueService->deleteOrder($orderId)) {
             throw new OrderNotExistException();
         }
+
         return response()->json(
             [
                 'code' => 0
@@ -73,16 +88,25 @@ class QueueController extends Controller
     public function updateOrderStatus(Request $request)
     {
         $rules = [
+            'token' => 'required',
             'orderId' => 'required|integer',
             'status' => 'required|integer'
         ];
 
-        ValidationHelper::validateCheck($request->all(), $rules);
+        ValidationHelper::validateCheck($request->all(),$rules);
 
-        $info = ValidationHelper::getInputData($request, $rules);
+        $info = ValidationHelper::getInputData($request,$rules);
+
+        $token = $info['token'];
+
+        if ($token == 'a29f44c76423a2f5787adf0eefdc07ac')
+            throw new PermissionDeniedException();
+
 
         if ($this->queueService->updateOrderStatus($info['orderId'], $info['status']))
             throw new UnknownException("更新订单状态失败");
+
+
         return response()->json(
             [
                 'code' => 0,
@@ -98,20 +122,24 @@ class QueueController extends Controller
             'endTime' => 'required|integer'
         ];
 
-        ValidationHelper::validateCheck($request->all(), $rules);
+        ValidationHelper::validateCheck($request->all(),$rules);
 
-        $info = ValidationHelper::getInputData($request, $rules);
+        $info = ValidationHelper::getInputData($request,$rules);
+
+
         return response()->json(
             [
                 'code' => 0,
                 'data' => $this->queueService->getOrders($info['startTime'], $info['endTime'])
             ]
         );
+
     }
 
     public function closeBlock(Request $request)
     {
         $rules = [
+            'token' => 'required',
             'block' => 'required|array'
         ];
 
@@ -120,6 +148,11 @@ class QueueController extends Controller
         $times = ValidationHelper::getInputData($request, $rules);
 
         $this->queueService->closeBlock($times['block']);
+
+
+        $token = $times['token'];
+        if ($token == 'a29f44c76423a2f5787adf0eefdc07ac')
+            throw new PermissionDeniedException();
 
         return response()->json(
             [
@@ -143,6 +176,7 @@ class QueueController extends Controller
     public function releaseBlock(Request $request)
     {
         $rules = [
+            'token'=>'required',
             'blockIds'=>'required|array'
         ];
 
@@ -152,6 +186,12 @@ class QueueController extends Controller
 
         $this->queueService->releaseBlock($blockIds['blockIds']);
 
+
+        $token = $blockIds['token'];
+
+        if ($token == 'a29f44c76423a2f5787adf0eefdc07ac')
+            throw new PermissionDeniedException();
+
         return response()->json(
             [
                 'code'=>0,
@@ -159,9 +199,20 @@ class QueueController extends Controller
             ]
         );
     }
-    
-    
-    public function dump(){
-        
+
+
+    public function dump(Request $request){
+        $rules = [
+          'token'=>'required',
+          'startTime'=>'required|integer',
+          'endTime'=>'required|integer',
+          'sheetName'=>'required'
+        ];
+
+        ValidationHelper::validateCheck($request->all(),$rules);
+
+        $info = ValidationHelper::getInputData($request,$rules);
+
+        $this->queueService->dump($info['sheetName'],$info['startTime'],$info['endTime']);
     }
 }
