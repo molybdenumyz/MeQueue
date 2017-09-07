@@ -19,7 +19,6 @@ class CreateQueueTable extends Migration
             $table->string('name',100)->nullable();
             $table->string('mobile',125)->nullable();
             $table->string(' position',100)->nullable();
-            $table->string('doctor',100)->nullable();
             $table->bigInteger('start_time');
             $table->bigInteger('end_time');
             $table->bigInteger('expires_at')->default(0);
