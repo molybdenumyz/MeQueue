@@ -99,7 +99,7 @@ class QueueController extends Controller
 
         $token = $info['token'];
 
-        if ($token == 'a29f44c76423a2f5787adf0eefdc07ac')
+        if (strcmp("a29f44c76423a2f5787adf0eefdc07ac",$token))
             throw new PermissionDeniedException();
 
 
@@ -151,7 +151,7 @@ class QueueController extends Controller
 
 
         $token = $times['token'];
-        if ($token == 'a29f44c76423a2f5787adf0eefdc07ac')
+        if (strcmp("a29f44c76423a2f5787adf0eefdc07ac",$token))
             throw new PermissionDeniedException();
 
         return response()->json(
@@ -189,7 +189,7 @@ class QueueController extends Controller
 
         $token = $blockIds['token'];
 
-        if ($token == 'a29f44c76423a2f5787adf0eefdc07ac')
+        if (strcmp("a29f44c76423a2f5787adf0eefdc07ac",$token))
             throw new PermissionDeniedException();
 
         return response()->json(
