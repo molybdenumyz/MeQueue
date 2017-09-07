@@ -103,7 +103,7 @@ class QueueController extends Controller
             throw new PermissionDeniedException();
 
 
-        if ($this->queueService->updateOrderStatus($info['orderId'], $info['status']))
+        if (! $this->queueService->updateOrderStatus($info['orderId'], $info['status']))
             throw new UnknownException("更新订单状态失败");
 
 
