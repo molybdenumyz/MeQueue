@@ -13,7 +13,7 @@ use App\Exceptions\BaseException;
 
 class UnknownException extends BaseException
 {
-    private $code = 5000;
+    protected $code = 5000;
 
     public function __construct(string $data)
     {
