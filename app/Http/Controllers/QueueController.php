@@ -29,6 +29,7 @@ class QueueController extends Controller
     public function __construct(QueueService $queueService)
     {
         $this->queueService = $queueService;
+        $this->middleware('')
     }
 
     public function addOrder(Request $request)
@@ -109,8 +110,7 @@ class QueueController extends Controller
 
         return response()->json(
             [
-                'code' => 0,
-                'data' => '😯'
+                'code' => 0
             ]
         );
     }
