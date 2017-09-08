@@ -29,7 +29,6 @@ class QueueController extends Controller
     public function __construct(QueueService $queueService)
     {
         $this->queueService = $queueService;
-        $this->middleware('')
     }
 
     public function addOrder(Request $request)
