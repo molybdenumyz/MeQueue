@@ -34,6 +34,8 @@ class QueueController extends Controller
     public function addOrder(Request $request)
     {
         $rules = [
+            'start'=>'required|integer',
+            'end'=>'required|integer',
             'name' => 'required|max:100',
             'mobile' => 'required|max:125',
             'position' => 'required|max:100',
@@ -139,14 +141,16 @@ class QueueController extends Controller
     {
         $rules = [
             'token' => 'required',
-            'block' => 'required|array'
+            'block' => 'required|array',
+            'startTime' => 'required|integer',
+            'endTime' => 'required|integer'
         ];
 
         ValidationHelper::validateCheck($request->all(), $rules);
 
         $times = ValidationHelper::getInputData($request, $rules);
 
-        $this->queueService->closeBlock($times['block']);
+        $this->queueService->closeBlock($times['startTime'],$times['endTime'],$times['block']);
 
 
         $token = $times['token'];

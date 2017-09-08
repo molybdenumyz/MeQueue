@@ -52,7 +52,6 @@ class QueueService implements QueueServiceInterface
                 }
             }
         }
-
         return $this->queueRepo->insertWithId($orderInfo);
     }
 
@@ -69,18 +68,8 @@ class QueueService implements QueueServiceInterface
 //            }
 //        });
 
-        $data = $this->queueRepo->getByMult([
-            [
-                'start_time', '>=', $startTime
-            ],
-            [
-                'end_time', '<=', $endTime
-            ]
-        ])->toArray();
+        $data = $this->queueRepo->findUnExpires(Utils::createTimeStamp(),$startTime,$endTime);
 
-        foreach ($data as &$item) {
-            $item = Utils::camelize($item);
-        }
 
         return $data;
     }
@@ -95,11 +84,14 @@ class QueueService implements QueueServiceInterface
         return $this->queueRepo->deleteWhere(['id' => $orderId]) == 1;
     }
 
-    function closeBlock($times)
+    function closeBlock($startTime,$endTime,$times)
     {
+        //查出时间段中存在的项
+        //$data = $this->queueRepo->findUnExpires(Utils::createTimeStamp(),$startTime,$endTime);
 
         $flag = false;
-        DB::transaction(function () use ($times, &$flag) {
+
+        DB::transaction(function () use (&$times, &$flag) {
             foreach ($times as &$time) {
                 $time['status'] = 2;
                 $time = Utils::unCamelize($time);

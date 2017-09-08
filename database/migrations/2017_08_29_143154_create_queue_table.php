@@ -22,6 +22,8 @@ class CreateQueueTable extends Migration
             $table->bigInteger('start_time');
             $table->bigInteger('end_time');
             $table->bigInteger('expires_at')->default(0);
+            $table->string('start',100);
+            $table->string('end',100);
         });
     }
 

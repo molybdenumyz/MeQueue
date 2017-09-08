@@ -19,7 +19,7 @@ interface QueueServiceInterface
 
     function deleteOrder($orderId);
 
-    function closeBlock($times);
+    function closeBlock($startTime,$endTime,$times);
 
     function getClosedBlock();
 
