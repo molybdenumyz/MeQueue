@@ -39,6 +39,6 @@ class QueueRepository extends AbstractRepository
     }
 
     function findUnExpires($now,$startTime,$endTime){
-        return DB::select('select id,status,mobile,position,start_time as startTime,end_time as endTime,expires_at as expriresAt,start,end FROM queue where start_time >='.$startTime.' and end_time  <= '.$endTime.' and (status != 0 or expires_at >= '.$now.')');
+        return DB::select('select id,name,status,mobile,position,start_time as startTime,end_time as endTime,expires_at as expriresAt,start,end FROM queue where start_time >='.$startTime.' and end_time  <= '.$endTime.' and (status != 0 or expires_at >= '.$now.')');
     }
 }

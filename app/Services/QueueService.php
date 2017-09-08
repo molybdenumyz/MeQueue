@@ -84,7 +84,7 @@ class QueueService implements QueueServiceInterface
         return $this->queueRepo->deleteWhere(['id' => $orderId]) == 1;
     }
 
-    function closeBlock($startTime,$endTime,$times)
+    function closeBlock($times)
     {
         //查出时间段中存在的项
         //$data = $this->queueRepo->findUnExpires(Utils::createTimeStamp(),$startTime,$endTime);

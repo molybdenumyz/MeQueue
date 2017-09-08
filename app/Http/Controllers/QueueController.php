@@ -142,15 +142,13 @@ class QueueController extends Controller
         $rules = [
             'token' => 'required',
             'block' => 'required|array',
-            'startTime' => 'required|integer',
-            'endTime' => 'required|integer'
         ];
 
         ValidationHelper::validateCheck($request->all(), $rules);
 
         $times = ValidationHelper::getInputData($request, $rules);
 
-        $this->queueService->closeBlock($times['startTime'],$times['endTime'],$times['block']);
+        $this->queueService->closeBlock($times['block']);
 
 
         $token = $times['token'];
