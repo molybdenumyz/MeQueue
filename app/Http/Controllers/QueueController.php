@@ -71,7 +71,7 @@ class QueueController extends Controller
 
         $token = $info['token'];
 
-        if ($token == 'a29f44c76423a2f5787adf0eefdc07ac')
+        if (strcmp("a29f44c76423a2f5787adf0eefdc07ac",$token))
             throw new PermissionDeniedException();
 
         if (!$this->queueService->deleteOrder($orderId)) {
@@ -211,6 +211,12 @@ class QueueController extends Controller
         ValidationHelper::validateCheck($request->all(),$rules);
 
         $info = ValidationHelper::getInputData($request,$rules);
+
+        $token = $info['token'];
+
+        if (strcmp("a29f44c76423a2f5787adf0eefdc07ac",$token))
+            throw new PermissionDeniedException();
+
 
         $this->queueService->dump($info['sheetName'],$info['startTime'],$info['endTime']);
     }
