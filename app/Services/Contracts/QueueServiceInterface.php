@@ -13,7 +13,7 @@ interface QueueServiceInterface
 {
     function applyOrder(array $orderInfo);
 
-    function getOrders($startTime,$endTime);
+    function getOrders($startTime,$endTime,$token);
 
     function updateOrderStatus($orderId,$status);
 

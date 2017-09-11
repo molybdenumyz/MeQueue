@@ -127,11 +127,20 @@ class QueueController extends Controller
 
         $info = ValidationHelper::getInputData($request,$rules);
 
+        $token = $request->input('token',null);
+
+        if ($token != null){
+            if (strcmp("a29f44c76423a2f5787adf0eefdc07ac",$token))
+                throw new PermissionDeniedException();
+            $status = 0;
+        }else{
+            $status = 1;
+        }
 
         return response()->json(
             [
                 'code' => 0,
-                'data' => $this->queueService->getOrders($info['startTime'], $info['endTime'])
+                'data' => $this->queueService->getOrders($info['startTime'], $info['endTime'],$status)
             ]
         );
 

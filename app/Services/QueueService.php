@@ -59,7 +59,7 @@ class QueueService implements QueueServiceInterface
         return $id;
     }
 
-    function getOrders($startTime, $endTime)
+    function getOrders($startTime, $endTime,$status)
     {
         $now = Utils::createTimeStamp();
 
@@ -71,9 +71,10 @@ class QueueService implements QueueServiceInterface
 //                $this->queueRepo->delete($applier->id);
 //            }
 //        });
-
-        $data = $this->queueRepo->findUnExpires($now,$startTime,$endTime);
-
+        if ($status == 1){
+            $data = $this->queueRepo->findUnExpires($now,$startTime,$endTime);
+        }else
+            $data = $this->queueRepo->findFreeByTime($startTime,$endTime);
 
         return $data;
     }
