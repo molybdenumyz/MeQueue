@@ -34,25 +34,29 @@ class QueueService implements QueueServiceInterface
 
     function applyOrder(array $orderInfo)
     {
-        $records = $this->queueRepo->findFreeByTime($orderInfo['start_time'], $orderInfo['end_time']);
-        if ($records != null) {
-            $now = Utils::createTimeStamp();
-            foreach ($records as $record) {
+        $id = 0;
+        DB::transaction(function ()use ($orderInfo,&$id){
+            $records = $this->queueRepo->findFreeByTime($orderInfo['start_time'], $orderInfo['end_time']);
+            if ($records != null) {
+                $now = Utils::createTimeStamp();
+                foreach ($records as $record) {
 
-                if ($record->status == 0) {
-                    if ($now > $record->expires_at) {
-                        continue;
-                    } else {
+                    if ($record->status == 0) {
+                        if ($now > $record->expires_at) {
+                            continue;
+                        } else {
+                            throw new ApplyLateException();
+                        }
+                    } elseif ($record->status == 1) {
                         throw new ApplyLateException();
+                    } elseif ($record->status == 2) {
+                        throw new TImeHaveBeenBlock();
                     }
-                } elseif ($record->status == 1) {
-                    throw new ApplyLateException();
-                } elseif ($record->status == 2) {
-                    throw new TImeHaveBeenBlock();
                 }
             }
-        }
-        return $this->queueRepo->insertWithId($orderInfo);
+            $id = $this->queueRepo->insertWithId($orderInfo);
+        });
+        return $id;
     }
 
     function getOrders($startTime, $endTime)
@@ -68,7 +72,7 @@ class QueueService implements QueueServiceInterface
 //            }
 //        });
 
-        $data = $this->queueRepo->findUnExpires(Utils::createTimeStamp(),$startTime,$endTime);
+        $data = $this->queueRepo->findUnExpires($now,$startTime,$endTime);
 
 
         return $data;
@@ -93,9 +97,14 @@ class QueueService implements QueueServiceInterface
 
         DB::transaction(function () use (&$times, &$flag) {
             foreach ($times as &$time) {
-                $time['status'] = 2;
-                $time = Utils::unCamelize($time);
-                $this->queueRepo->insert($time);
+                $count = $this->queueRepo->getWhereCount(['start_time'=>$time['startTime'],'end_time'=>$time['endTime']]);
+                if ($count >1)
+                    continue;
+                else{
+                    $time['status'] = 2;
+                    $time = Utils::unCamelize($time);
+                    $this->queueRepo->insert($time);
+                }
             }
             $flag = true;
         });
@@ -117,7 +126,10 @@ class QueueService implements QueueServiceInterface
 
     function releaseBlock($blockIds)
     {
-        return $this->queueRepo->deleteWhereIn('id', $blockIds);
+        DB::transaction(function () use($blockIds){
+            $this->queueRepo->deleteWhereIn('id', $blockIds);
+        });
+        return true;
     }
 
     function dump($sheetName,$startTime, $endTime)
@@ -164,7 +176,8 @@ class QueueService implements QueueServiceInterface
                 $sheet->setWidth(array(
                     'A' => 15,
                     'B' => 10,
-                    'C' => 15,
+                    'C' => 12,
+                    'D' => 12,
                     'E' => 20,
                     'F' => 20
                 ));
