@@ -73,8 +73,14 @@ class QueueService implements QueueServiceInterface
 //        });
         if ($status == 1){
             $data = $this->queueRepo->findUnExpires($now,$startTime,$endTime);
-        }else
-            $data = $this->queueRepo->findFreeByTime($startTime,$endTime);
+
+        }else{
+            $data = [
+                'unExpires'=>$this->queueRepo->findUnExpires($now,$startTime,$endTime),
+                'expires'=>$this->queueRepo->findExpires($now)
+            ];
+        }
+
 
         return $data;
     }

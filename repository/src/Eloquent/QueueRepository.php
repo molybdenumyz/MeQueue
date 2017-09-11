@@ -24,12 +24,14 @@ class QueueRepository extends AbstractRepository
 
     function findFreeByTime($startTime, $endTime)
     {
-        return DB::select('select * from queue where start_time >= ' . $startTime . ' and end_time <= ' . $endTime);
+        return DB::select('select * from queue where start_time >= ' .
+            $startTime . ' and end_time <= ' . $endTime.
+            ' order by  start_time');
     }
 
-    function findExpiresId($now)
+    function findExpires($now)
     {
-        return DB::select('select id from queue where status = 0 and expires_at < ' . $now);
+        return DB::select('select * from queue where status = 0 and expires_at < ' . $now .' order by start_time');
 
     }
 
