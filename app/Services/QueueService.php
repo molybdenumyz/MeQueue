@@ -35,7 +35,7 @@ class QueueService implements QueueServiceInterface
     function applyOrder(array $orderInfo)
     {
         $id = 0;
-        DB::transaction(function ()use ($orderInfo,&$id){
+        DB::transaction(function () use ($orderInfo, &$id) {
             $records = $this->queueRepo->findFreeByTime($orderInfo['start_time'], $orderInfo['end_time']);
             if ($records != null) {
                 $now = Utils::createTimeStamp();
@@ -59,7 +59,7 @@ class QueueService implements QueueServiceInterface
         return $id;
     }
 
-    function getOrders($startTime, $endTime,$status)
+    function getOrders($startTime, $endTime, $status)
     {
         $now = Utils::createTimeStamp();
 
@@ -71,13 +71,13 @@ class QueueService implements QueueServiceInterface
 //                $this->queueRepo->delete($applier->id);
 //            }
 //        });
-        if ($status == 1){
-            $data = $this->queueRepo->findUnExpires($now,$startTime,$endTime);
+        if ($status == 1) {
+            $data = $this->queueRepo->findUnExpires($now, $startTime, $endTime);
 
-        }else{
+        } else {
             $data = [
-                'unExpires'=>$this->queueRepo->findUnExpires($now,$startTime,$endTime),
-                'expires'=>$this->queueRepo->findExpires($now)
+                'unExpires' => $this->queueRepo->findUnExpires($now, $startTime, $endTime),
+                'expires' => $this->queueRepo->findExpires($now)
             ];
         }
 
@@ -104,10 +104,10 @@ class QueueService implements QueueServiceInterface
 
         DB::transaction(function () use (&$times, &$flag) {
             foreach ($times as &$time) {
-                $count = $this->queueRepo->getWhereCount(['start_time'=>$time['startTime'],'end_time'=>$time['endTime']]);
-                if ($count >1)
+                $count = $this->queueRepo->getWhereCount(['start_time' => $time['startTime'], 'end_time' => $time['endTime']]);
+                if ($count > 1)
                     continue;
-                else{
+                else {
                     $time['status'] = 2;
                     $time = Utils::unCamelize($time);
                     $this->queueRepo->insert($time);
@@ -133,13 +133,13 @@ class QueueService implements QueueServiceInterface
 
     function releaseBlock($blockIds)
     {
-        DB::transaction(function () use($blockIds){
+        DB::transaction(function () use ($blockIds) {
             $this->queueRepo->deleteWhereIn('id', $blockIds);
         });
         return true;
     }
 
-    function dump($sheetName,$startTime, $endTime)
+    function dump($sheetName, $startTime, $endTime)
     {
         $rows[] = ['当前预约状态', '患者姓名', '患者手机号', '检查部位', '开始时间', '结束时间'];
 
@@ -152,23 +152,27 @@ class QueueService implements QueueServiceInterface
             ],
             [
                 'status', '!=', 2
-            ],
-            [
-                'expires_at', '>', Utils::createTimeStamp()
             ]
-        ], ['status', 'name', 'mobile', 'position', 'start_time', 'end_time'])->toArray();
+        ], ['status', 'name', 'mobile', 'position', 'start_time', 'end_time', 'expires_at'])->toArray();
+
 
         foreach ($data as &$datum) {
 
             $datum = array_values($datum);
             if ($datum[0] == 0) {
-                $datum[0] = '已预约';
+                if ($datum[6] > Utils::createTimeStamp())
+                    $datum[0] = '待确认';
+                else
+                    $datum[0] = '已过期';
             } elseif ($datum[0] == 1) {
                 $datum[0] = '预约确认';
             }
 
             $datum[4] = date('Y-m-d H:i:s', $datum[4] / 1000);
             $datum[5] = date('Y-m-d H:i:s', $datum[5] / 1000);
+
+            unset($datum[6]);
+
             $rows[] = $datum;
         }
 
@@ -181,7 +185,7 @@ class QueueService implements QueueServiceInterface
             $excel->sheet('sheet1', function ($sheet) use ($rows) {
 
                 $sheet->setWidth(array(
-                    'A' => 15,
+                    'A' => 12,
                     'B' => 10,
                     'C' => 12,
                     'D' => 12,
