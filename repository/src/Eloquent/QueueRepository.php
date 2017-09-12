@@ -22,7 +22,7 @@ class QueueRepository extends AbstractRepository
         return "App\Repository\Models\Queue";
     }
 
-    function findFreeByTime($startTime, $endTime)
+    function findFreeByTime($startTime,$endTime)
     {
         return DB::select('select * from queue where start_time >= ' .
             $startTime . ' and end_time <= ' . $endTime.
@@ -43,5 +43,9 @@ class QueueRepository extends AbstractRepository
     function findUnExpires($now, $startTime, $endTime)
     {
         return DB::select('select id,name,status,mobile,position,start_time as startTime,end_time as endTime,expires_at as expriresAt,start,end FROM queue where start_time >=' . $startTime . ' and end_time  <= ' . $endTime . ' and (status != 0 or expires_at >= ' . $now . ') order by  start_time');
+    }
+
+    function findWeatherOccupation($now,$x,$y){
+        return DB::select('select count(*) as row from queue where ( start_time <= '.$x.' AND  end_time >= '.$x.') OR ( start_time <= '.$y.' AND end_time >= '.$y.') and ((status != 0 or expires_at >= ' . $now . '))' );
     }
 }

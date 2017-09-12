@@ -36,25 +36,12 @@ class QueueService implements QueueServiceInterface
     {
         $id = 0;
         DB::transaction(function () use ($orderInfo, &$id) {
-            $records = $this->queueRepo->findFreeByTime($orderInfo['start_time'], $orderInfo['end_time']);
-            if ($records != null) {
-                $now = Utils::createTimeStamp();
-                foreach ($records as $record) {
 
-                    if ($record->status == 0) {
-                        if ($now > $record->expires_at) {
-                            continue;
-                        } else {
-                            throw new ApplyLateException();
-                        }
-                    } elseif ($record->status == 1) {
-                        throw new ApplyLateException();
-                    } elseif ($record->status == 2) {
-                        throw new TImeHaveBeenBlock();
-                    }
-                }
-            }
+            $this->findOccupation($orderInfo['start_time'],$orderInfo['end_time']);
+
+
             $id = $this->queueRepo->insertWithId($orderInfo);
+
         });
         return $id;
     }
@@ -168,8 +155,8 @@ class QueueService implements QueueServiceInterface
                 $datum[0] = '预约确认';
             }
 
-            $datum[4] = date('Y-m-d H:i:s', $datum[4] / 1000);
-            $datum[5] = date('Y-m-d H:i:s', $datum[5] / 1000);
+            $datum[4] = date('Y-m-d H:i', $datum[4] / 1000);
+            $datum[5] = date('Y-m-d H:i', $datum[5] / 1000);
 
             unset($datum[6]);
 
@@ -201,5 +188,20 @@ class QueueService implements QueueServiceInterface
             'Access-Control-Allow-Methods' => 'GET, POST, DELETE, PATCH, PUT, OPTIONS',
             'Access-Control-Allow-Credentials' => 'true'
         ]);
+    }
+
+    function findOccupation($startTime,$endTime){
+
+        $rowLeft = count($this->queueRepo->getBy('start_time',$startTime,['id']));
+
+        $rowRight = count($this->queueRepo->getBy('end_time',$endTime,['id']));
+
+
+        $count = $this->queueRepo->findWeatherOccupation(Utils::createTimeStamp(),$startTime,$endTime)[0]->row ;
+
+        if (($count - $rowLeft -$rowRight) > 0)
+            throw new ApplyLateException();
+
+        return true;
     }
 }
