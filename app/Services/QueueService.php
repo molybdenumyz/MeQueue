@@ -192,14 +192,14 @@ class QueueService implements QueueServiceInterface
 
     function findOccupation($startTime,$endTime){
 
-        $rowLeft = count($this->queueRepo->getBy('start_time',$startTime,['id']));
+        $rowLeft = count($this->queueRepo->getBy('end_time',$startTime,['id']));
 
-        $rowRight = count($this->queueRepo->getBy('end_time',$endTime,['id']));
+        $rowRight = count($this->queueRepo->getBy('start_time',$endTime,['id']));
 
 
         $count = $this->queueRepo->findWeatherOccupation(Utils::createTimeStamp(),$startTime,$endTime)[0]->row ;
 
-        if (($count - $rowLeft -$rowRight) > 0)
+        if (($count - $rowLeft - $rowRight) > 0)
             throw new ApplyLateException();
 
         return true;
