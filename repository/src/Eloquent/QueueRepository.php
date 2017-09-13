@@ -46,6 +46,6 @@ class QueueRepository extends AbstractRepository
     }
 
     function findWeatherOccupation($now,$x,$y){
-        return DB::select('select count(*) as row from queue where ( start_time <= '.$x.' AND  end_time >= '.$x.') OR ( start_time <= '.$y.' AND end_time >= '.$y.') and ((status != 0 or expires_at >= ' . $now . '))' );
+        return DB::select('select count(*) as row from queue where (( start_time <= '.$x.' AND  end_time >= '.$x.') OR ( start_time <= '.$y.' AND end_time >= '.$y.')) AND !((status = 0 AND expires_at < ' . $now . '))' );
     }
 }
