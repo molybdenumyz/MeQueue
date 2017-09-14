@@ -128,7 +128,7 @@ class QueueService implements QueueServiceInterface
 
     function dump($sheetName, $startTime, $endTime)
     {
-        $rows[] = ['序号', '       预约日期', '预约状态', '患者姓名', '患者手机号', '检查部位', '开始时间', '结束时间'];
+        $rows[] = ['序号', '      预约日期', '预约状态', '患者姓名', '患者手机号', '检查部位', '开始时间', '结束时间'];
 
         $data = $this->queueRepo->getByMult([
             [
@@ -183,7 +183,7 @@ class QueueService implements QueueServiceInterface
 
                 $sheet->setWidth(array(
                     'A' => 5,
-                    'B' => 14,
+                    'B' => 13.5,
                     'C' => 10,
                     'D' => 9,
                     'E' => 12,
