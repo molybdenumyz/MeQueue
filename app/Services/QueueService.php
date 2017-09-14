@@ -37,7 +37,7 @@ class QueueService implements QueueServiceInterface
         $id = 0;
         DB::transaction(function () use ($orderInfo, &$id) {
 
-            $this->findOccupation($orderInfo['start_time'],$orderInfo['end_time']);
+            $this->findOccupation($orderInfo['start_time'], $orderInfo['end_time']);
 
 
             $id = $this->queueRepo->insertWithId($orderInfo);
@@ -128,7 +128,7 @@ class QueueService implements QueueServiceInterface
 
     function dump($sheetName, $startTime, $endTime)
     {
-        $rows[] = ['当前预约状态', '患者姓名', '患者手机号', '检查部位', '开始时间', '结束时间'];
+        $rows[] = ['序号', '开始日期', '预约状态', '患者姓名', '患者手机号', '检查部位', '开始时间', '结束时间'];
 
         $data = $this->queueRepo->getByMult([
             [
@@ -142,25 +142,35 @@ class QueueService implements QueueServiceInterface
             ]
         ], ['status', 'name', 'mobile', 'position', 'start_time', 'end_time', 'expires_at'])->toArray();
 
+        $count = 0;
 
         foreach ($data as &$datum) {
+            $count++;
+
+            $row = [];
+
+            $row[0] = $count;
 
             $datum = array_values($datum);
+
+            $row[1] = date('Y-m-d', $datum[4] / 1000);
+
+
             if ($datum[0] == 0) {
                 if ($datum[6] > Utils::createTimeStamp())
-                    $datum[0] = '待确认';
+                    $row[2] = '待确认';
                 else
-                    $datum[0] = '已过期';
+                    $row[2] = '已过期';
             } elseif ($datum[0] == 1) {
-                $datum[0] = '预约确认';
+                $row[2] = '预约确认';
             }
+            $row[3] = $datum[1];
+            $row[4] = $datum[2];
+            $row[5] = $datum[3];
+            $row[6] = date('H:i', $datum[4] / 1000);
+            $row[7] = date('H:i', $datum[5] / 1000);
 
-            $datum[4] = date('Y-m-d H:i', $datum[4] / 1000);
-            $datum[5] = date('Y-m-d H:i', $datum[5] / 1000);
-
-            unset($datum[6]);
-
-            $rows[] = $datum;
+            $rows[] = $row;
         }
 
         $this->export($sheetName, $rows);
@@ -172,12 +182,14 @@ class QueueService implements QueueServiceInterface
             $excel->sheet('sheet1', function ($sheet) use ($rows) {
 
                 $sheet->setWidth(array(
-                    'A' => 12,
+                    'A' => 5,
                     'B' => 10,
-                    'C' => 12,
-                    'D' => 12,
-                    'E' => 20,
-                    'F' => 20
+                    'C' => 10,
+                    'D' => 9,
+                    'E' => 12,
+                    'F' => 12,
+                    'G' => 10,
+                    'H' => 10
                 ));
                 $sheet->rows($rows);
             });
@@ -190,14 +202,15 @@ class QueueService implements QueueServiceInterface
         ]);
     }
 
-    function findOccupation($startTime,$endTime){
+    function findOccupation($startTime, $endTime)
+    {
 
-        $rowLeft = count($this->queueRepo->getBy('end_time',$startTime,['id']));
-        //dd($rowLeft);
+        $rowLeft = count($this->queueRepo->getBy('end_time', $startTime, ['id']));
 
-        $rowRight = count($this->queueRepo->getBy('start_time',$endTime,['id']));
 
-        $count = $this->queueRepo->findWeatherOccupation(Utils::createTimeStamp(),$startTime,$endTime)[0]->row ;
+        $rowRight = count($this->queueRepo->getBy('start_time', $endTime, ['id']));
+
+        $count = $this->queueRepo->findWeatherOccupation(Utils::createTimeStamp(), $startTime, $endTime)[0]->row;
 
 
         if (($count - $rowLeft - $rowRight) > 0)
